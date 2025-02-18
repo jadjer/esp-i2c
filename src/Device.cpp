@@ -15,18 +15,21 @@
 #include "i2c/Device.hpp"
 
 #include <driver/i2c_master.h>
+#include <esp_log.h>
 
 namespace i2c {
 
+auto const TAG = "I2C";
+
+auto const I2C_TIMEOUT_MS = 1000;
+
 Device::Device(Device::BusHandle const busHandle, Device::DeviceAddress const deviceAddress) {
   i2c_device_config_t const deviceConfiguration = {
-      .dev_addr_length = I2C_ADDR_BIT_LEN_7,
       .device_address = deviceAddress,
       .scl_speed_hz = 100000,
-      .scl_wait_us = 1,
       .flags = {
-          .disable_ack_check = false,
-      },
+          .disable_ack_check = true,
+      }
   };
 
   ESP_ERROR_CHECK(i2c_master_bus_add_device(busHandle, &deviceConfiguration, &m_deviceHandle));
@@ -36,13 +39,21 @@ Device::~Device() {
   ESP_ERROR_CHECK(i2c_master_bus_rm_device(m_deviceHandle));
 }
 
-void Device::read() {
-  ESP_ERROR_CHECK(i2c_master_transmit_receive(m_deviceHandle, nullptr, 0, nullptr, 0, -1));
+Device::Bytes Device::read(Device::RegisterAddress registerAddress, Device::Size packageSize) {
+  Device::Byte buffer[32] = {};
+
+  ESP_ERROR_CHECK(i2c_master_transmit_receive(m_deviceHandle, &registerAddress, 1, buffer, packageSize, I2C_TIMEOUT_MS));
+
+  return {buffer, buffer + packageSize};
 }
 
-void Device::write() {
-  ESP_ERROR_CHECK(i2c_master_transmit(m_deviceHandle, nullptr, 0, -1));
-  ESP_ERROR_CHECK(i2c_master_receive(m_deviceHandle, nullptr, 0, -1));
+void Device::write(Device::RegisterAddress registerAddress, Device::Bytes bytes) {
+  Device::Bytes registerWithData{};
+
+  registerWithData.push_back(registerAddress);
+  registerWithData.insert(registerWithData.end(), bytes.begin(), bytes.end());
+
+  ESP_ERROR_CHECK(i2c_master_transmit(m_deviceHandle, registerWithData.data(), registerWithData.size(), I2C_TIMEOUT_MS));
 }
 
 }// namespace i2c

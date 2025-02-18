@@ -16,22 +16,45 @@
 
 #include <cstdint>
 #include <driver/i2c_types.h>
+#include <vector>
 
+/**
+ * @namespace i2c
+ */
 namespace i2c {
 
+/**
+ * @class Device
+ * @brief Slave device implementation
+ */
 class Device {
 public:
+  using Byte = std::uint8_t;
+  using Size = std::size_t;
+  using Bytes = std::vector<Byte>;
   using BusHandle = i2c_master_bus_handle_t;
   using DeviceHandle = i2c_master_dev_handle_t;
   using DeviceAddress = std::uint16_t;
+  using RegisterAddress = Device::Byte;
 
 public:
   Device(Device::BusHandle busHandle, Device::DeviceAddress deviceAddress);
   ~Device();
 
 public:
-  void read();
-  void write();
+  /**
+   * Read bytes from device
+   * @param registerAddress Register address
+   * @param packageSize Package size for read
+   * @return Vector of bytes
+   */
+  Device::Bytes read(Device::RegisterAddress registerAddress, Size packageSize = 1);
+  /**
+   * Write bytes to device
+   * @param registerAddress Register address
+   * @param bytes Data package
+   */
+  void write(Device::RegisterAddress registerAddress, Device::Bytes bytes);
 
 private:
   Device::DeviceHandle m_deviceHandle = nullptr;

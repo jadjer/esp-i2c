@@ -17,8 +17,15 @@
 #include <driver/i2c_types.h>
 #include <i2c/Device.hpp>
 
+/**
+ * @namespace i2c
+ */
 namespace i2c {
 
+/**
+ * @class Master
+ * @brief I2C master device implementation
+ */
 class Master {
 public:
   using Pin = std::uint8_t;
@@ -31,6 +38,11 @@ public:
   ~Master();
 
 public:
+  /**
+   * Create new slave device
+   * @param address Device address
+   * @return Pointer of new device object
+   */
   DevicePtr createDevice(Master::DeviceAddress address);
 
 private:

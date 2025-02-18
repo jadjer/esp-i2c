@@ -24,13 +24,11 @@ Master::Master(Master::Pin const sdaPin, Master::Pin const sclPin, Master::Port 
       .sda_io_num = static_cast<gpio_num_t>(sdaPin),
       .scl_io_num = static_cast<gpio_num_t>(sclPin),
       .clk_source = I2C_CLK_SRC_DEFAULT,
-      .glitch_ignore_cnt = 7,
+      .glitch_ignore_cnt = 15,
       .intr_priority = 0,
-      .trans_queue_depth = 100,
       .flags = {
-          .enable_internal_pullup = false,
-          .allow_pd = false,
-      },
+          .enable_internal_pullup = true,
+      }
   };
 
   ESP_ERROR_CHECK(i2c_new_master_bus(&masterConfiguration, &m_busHandle));
@@ -41,12 +39,12 @@ Master::~Master() {
 }
 
 DevicePtr Master::createDevice(DeviceAddress const address) {
-  auto const isDeviceFound = i2c_master_probe(m_busHandle, address, -1);
-  if (isDeviceFound) {
-    return std::make_unique<Device>(m_busHandle, address);
-  }
+//  auto const isDeviceFound = i2c_master_probe(m_busHandle, address, -1);
+//  if (not isDeviceFound) {
+//    return nullptr;
+//  }
 
-  return nullptr;
+  return std::make_unique<Device>(m_busHandle, address);
 }
 
 }// namespace i2c
