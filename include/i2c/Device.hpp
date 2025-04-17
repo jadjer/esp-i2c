@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <driver/i2c_types.h>
 #include <vector>
@@ -38,7 +39,7 @@ public:
   using RegisterAddress = Device::Byte;
 
 public:
-  Device(Device::BusHandle busHandle, Device::DeviceAddress deviceAddress);
+  Device(BusHandle busHandle, DeviceAddress deviceAddress);
   ~Device();
 
 public:
@@ -48,20 +49,16 @@ public:
    * @param packageSize Package size for read
    * @return Vector of bytes
    */
-  Device::Bytes read(Device::RegisterAddress registerAddress, Size packageSize = 1);
+  auto read(RegisterAddress registerAddress, Size packageSize = 1) -> Bytes;
   /**
    * Write bytes to device
    * @param registerAddress Register address
    * @param bytes Data package
    */
-  void write(Device::RegisterAddress registerAddress, Device::Bytes bytes);
+  auto write(RegisterAddress registerAddress, const Bytes& bytes) -> void;
 
 private:
-  Device::DeviceHandle m_deviceHandle = nullptr;
+  DeviceHandle m_deviceHandle = nullptr;
 };
 
-}// namespace i2c
-
-#include <memory>
-
-using DevicePtr = std::unique_ptr<i2c::Device>;
+} // namespace i2c

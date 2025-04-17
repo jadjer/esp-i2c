@@ -15,7 +15,6 @@
 #include "i2c/Device.hpp"
 
 #include <driver/i2c_master.h>
-#include <esp_log.h>
 
 namespace i2c {
 
@@ -39,7 +38,7 @@ Device::~Device() {
   ESP_ERROR_CHECK(i2c_master_bus_rm_device(m_deviceHandle));
 }
 
-Device::Bytes Device::read(Device::RegisterAddress registerAddress, Device::Size packageSize) {
+auto Device::read(Device::RegisterAddress const registerAddress, Device::Size const packageSize) -> Device::Bytes {
   Device::Byte buffer[32] = {};
 
   ESP_ERROR_CHECK(i2c_master_transmit_receive(m_deviceHandle, &registerAddress, 1, buffer, packageSize, I2C_TIMEOUT_MS));
@@ -47,7 +46,7 @@ Device::Bytes Device::read(Device::RegisterAddress registerAddress, Device::Size
   return {buffer, buffer + packageSize};
 }
 
-void Device::write(Device::RegisterAddress registerAddress, Device::Bytes bytes) {
+auto Device::write(Device::RegisterAddress const registerAddress, Device::Bytes const& bytes) -> void {
   Device::Bytes registerWithData{};
 
   registerWithData.push_back(registerAddress);

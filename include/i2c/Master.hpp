@@ -14,8 +14,9 @@
 
 #pragma once
 
-#include <driver/i2c_types.h>
+#include <cstdint>
 #include <i2c/Device.hpp>
+#include <memory>
 
 /**
  * @namespace i2c
@@ -30,6 +31,7 @@ class Master {
 public:
   using Pin = std::uint8_t;
   using Port = std::uint8_t;
+  using DevicePtr = std::unique_ptr<Device>;
   using BusHandle = Device::BusHandle;
   using DeviceAddress = Device::DeviceAddress;
 
@@ -43,10 +45,10 @@ public:
    * @param address Device address
    * @return Pointer of new device object
    */
-  DevicePtr createDevice(Master::DeviceAddress address);
+  auto createDevice(DeviceAddress address) -> DevicePtr;
 
 private:
-  Master::BusHandle m_busHandle = nullptr;
+  BusHandle m_busHandle = nullptr;
 };
 
-}// namespace i2c
+} // namespace i2c
