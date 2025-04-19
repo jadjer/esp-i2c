@@ -31,12 +31,17 @@ class Master {
 public:
   using Pin = std::uint8_t;
   using Port = std::uint8_t;
-  using DevicePtr = std::unique_ptr<Device>;
   using BusHandle = Device::BusHandle;
   using DeviceAddress = Device::DeviceAddress;
 
 public:
-  Master(Pin sdaPin, Pin sclPin, Port port = 0);
+  using DevicePointer = std::unique_ptr<Device>;
+  using MasterPointer = std::unique_ptr<Master>;
+
+public:
+  static auto createMaster(Pin sdaPin, Pin sclPin, Port port = 0) -> MasterPointer;
+
+public:
   ~Master();
 
 public:
@@ -45,10 +50,13 @@ public:
    * @param address Device address
    * @return Pointer of new device object
    */
-  auto createDevice(DeviceAddress address) -> DevicePtr;
+  auto createDevice(DeviceAddress address) -> DevicePointer;
 
 private:
-  BusHandle m_busHandle = nullptr;
+  Master(BusHandle busHandle);
+
+private:
+  BusHandle const busHandle = nullptr;
 };
 
 } // namespace i2c

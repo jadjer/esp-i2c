@@ -36,7 +36,7 @@ public:
   using BusHandle = i2c_master_bus_handle_t;
   using DeviceHandle = i2c_master_dev_handle_t;
   using DeviceAddress = std::uint16_t;
-  using RegisterAddress = Device::Byte;
+  using RegisterAddress = Byte;
 
 public:
   Device(BusHandle busHandle, DeviceAddress deviceAddress);
@@ -49,16 +49,16 @@ public:
    * @param packageSize Package size for read
    * @return Vector of bytes
    */
-  auto read(RegisterAddress registerAddress, Size packageSize = 1) -> Bytes;
+  [[maybe_unused]] auto read(RegisterAddress registerAddress, Size packageSize = 1) -> Bytes;
   /**
    * Write bytes to device
    * @param registerAddress Register address
    * @param bytes Data package
    */
-  auto write(RegisterAddress registerAddress, const Bytes& bytes) -> void;
+  [[maybe_unused]] auto write(RegisterAddress registerAddress, const Bytes& bytes) -> void;
 
 private:
-  DeviceHandle m_deviceHandle = nullptr;
+  DeviceHandle deviceHandle = nullptr;
 };
 
 } // namespace i2c

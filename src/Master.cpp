@@ -16,9 +16,17 @@
 
 #include <driver/i2c_master.h>
 
+#include <memory>
+
 namespace i2c {
 
-Master::Master(Master::Pin const sdaPin, Master::Pin const sclPin, Master::Port const port) {
+namespace {
+
+using Error = esp_err_t;
+
+} // namespace
+
+auto Master::createMaster(Master::Pin const sdaPin, Master::Pin const sclPin, Master::Port const port) -> Master::MasterPointer {
   i2c_master_bus_config_t const masterConfiguration = {
       .i2c_port = port,
       .sda_io_num = static_cast<gpio_num_t>(sdaPin),
@@ -26,25 +34,33 @@ Master::Master(Master::Pin const sdaPin, Master::Pin const sclPin, Master::Port 
       .clk_source = I2C_CLK_SRC_DEFAULT,
       .glitch_ignore_cnt = 15,
       .intr_priority = 0,
-      .flags = {
-          .enable_internal_pullup = true,
-      }
+      .flags =
+          {
+              .enable_internal_pullup = true,
+          },
   };
 
-  ESP_ERROR_CHECK(i2c_new_master_bus(&masterConfiguration, &m_busHandle));
+  BusHandle busHandle = nullptr;
+
+  Error const errorCode = i2c_new_master_bus(&masterConfiguration, &busHandle);
+  if (errorCode != ESP_OK) {
+    return nullptr;
+  }
+
+  return Master::MasterPointer(new Master(busHandle));
 }
 
-Master::~Master() {
-  ESP_ERROR_CHECK(i2c_del_master_bus(m_busHandle));
+Master::Master(Master::BusHandle busHandle) : busHandle(busHandle) {}
+
+Master::~Master() { i2c_del_master_bus(busHandle); }
+
+auto Master::createDevice(DeviceAddress const address) -> Master::DevicePointer {
+  auto const isDeviceFound = i2c_master_probe(busHandle, address, -1);
+  if (not isDeviceFound) {
+    return nullptr;
+  }
+
+  return std::make_unique<Device>(busHandle, address);
 }
 
-DevicePtr Master::createDevice(DeviceAddress const address) {
-//  auto const isDeviceFound = i2c_master_probe(m_busHandle, address, -1);
-//  if (not isDeviceFound) {
-//    return nullptr;
-//  }
-
-  return std::make_unique<Device>(m_busHandle, address);
-}
-
-}// namespace i2c
+} // namespace i2c
