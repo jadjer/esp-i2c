@@ -15,8 +15,11 @@
 #pragma once
 
 #include <cstdint>
+#include <driver/i2c_master.h>
+#include <expected>
 #include <i2c/Device.hpp>
 #include <memory>
+#include <string>
 
 /**
  * @namespace i2c
@@ -29,20 +32,26 @@ namespace i2c {
  */
 class Master {
 public:
+  enum class Error : std::uint8_t {
+    CREATE_MASTER_ERROR,
+  };
+
+public:
   using Pin = std::uint8_t;
   using Port = std::uint8_t;
-  using BusHandle = Device::BusHandle;
-  using DeviceAddress = Device::DeviceAddress;
+  using Pointer = std::unique_ptr<Master>;
+
+private:
+  using BusHandle = i2c_master_bus_handle_t;
 
 public:
-  using DevicePointer = std::unique_ptr<Device>;
-  using MasterPointer = std::unique_ptr<Master>;
+  static auto create(Pin sdaPin, Pin sclPin, Port port) -> std::expected<Pointer, Error>;
+
+private:
+  explicit Master(BusHandle busHandle) noexcept;
 
 public:
-  static auto createMaster(Pin sdaPin, Pin sclPin, Port port = 0) -> MasterPointer;
-
-public:
-  ~Master();
+  ~Master() noexcept;
 
 public:
   /**
@@ -50,13 +59,13 @@ public:
    * @param address Device address
    * @return Pointer of new device object
    */
-  auto createDevice(DeviceAddress address) -> DevicePointer;
+  auto createDevice(Device::Address deviceAddress) -> std::expected<Device::Pointer, Device::Error>;
 
 private:
-  Master(BusHandle busHandle);
+  auto closeHandle() -> void;
 
 private:
-  BusHandle const busHandle = nullptr;
+  BusHandle const m_busHandle;
 };
 
 } // namespace i2c

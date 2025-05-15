@@ -17,6 +17,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <driver/i2c_types.h>
+#include <expected>
+#include <memory>
 #include <vector>
 
 /**
@@ -30,17 +32,31 @@ namespace i2c {
  */
 class Device {
 public:
+  enum class Error : std::uint8_t {
+    DEVICE_NOT_FOUND,
+    CREATE_DEVICE_ERROR,
+  };
+
+public:
+  using Bus = i2c_master_bus_handle_t;
   using Byte = std::uint8_t;
   using Size = std::size_t;
   using Bytes = std::vector<Byte>;
-  using BusHandle = i2c_master_bus_handle_t;
+  using Address = std::uint16_t;
+  using Pointer = std::unique_ptr<Device>;
+  using Register = Byte;
+
+private:
   using DeviceHandle = i2c_master_dev_handle_t;
-  using DeviceAddress = std::uint16_t;
-  using RegisterAddress = Byte;
 
 public:
-  Device(BusHandle busHandle, DeviceAddress deviceAddress);
-  ~Device();
+  static auto create(Bus bus, Address address) -> std::expected<Pointer, Error>;
+
+private:
+  explicit Device(DeviceHandle deviceHandle) noexcept;
+
+public:
+  ~Device() noexcept;
 
 public:
   /**
@@ -49,16 +65,19 @@ public:
    * @param packageSize Package size for read
    * @return Vector of bytes
    */
-  [[maybe_unused]] auto read(RegisterAddress registerAddress, Size packageSize = 1) -> Bytes;
+  [[maybe_unused]] auto read(Register registerAddress, Size packageSize = 1) -> Bytes;
   /**
    * Write bytes to device
    * @param registerAddress Register address
    * @param bytes Data package
    */
-  [[maybe_unused]] auto write(RegisterAddress registerAddress, const Bytes& bytes) -> void;
+  [[maybe_unused]] auto write(Register registerAddress, Bytes const &bytes) -> void;
 
 private:
-  DeviceHandle deviceHandle = nullptr;
+  auto closeHandle() -> void;
+
+private:
+  DeviceHandle const m_deviceHandle;
 };
 
 } // namespace i2c
